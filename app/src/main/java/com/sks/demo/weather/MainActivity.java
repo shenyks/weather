@@ -1,9 +1,11 @@
 package com.sks.demo.weather;
 
 import java.io.IOException;
+import java.util.Date;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 
@@ -42,18 +44,22 @@ public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = "MainActivity";
 
+    //where we save user setting (i.e. last searched city)
     AppPrefSetting appSetting;
 
+    //Handler to refresh the weather info every n sec
+    Handler refreshHandler = new Handler();
+    Runnable refreshRunner;
+
+    //UI elements
     ProgressBar loadingProgressBar;
     TextView messageTextView;
     View weatherDisplayView;
-
     TextView displayCityTextView;
     TextView currentTempTextView;
     TextView pressureTextView;
     TextView humidityTextView;
     TextView windTextView;
-
     ImageView weatherIcon;
 
     @Override
@@ -90,8 +96,32 @@ public class MainActivity extends AppCompatActivity
     {
         super.onResume();
 
-        //find weather for last city (if any)
-        checkLastCity();
+        Log.d(TAG, "onResume: Start refreshing weather info");
+        //refresh current displayed weather info every n sec (start 1st run immediately)
+        refreshHandler.postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                //refresh current weather
+                MainActivity.this.checkLastCity();
+
+                //repeat this until the activity is not visible (check onPause())
+                refreshRunner = this;
+                refreshHandler.postDelayed(refreshRunner, AppConstants.WEATHER_REFRESH_INTERVAL);
+            }
+        }, 0L);
+
+    }
+
+    @Override
+    protected void onPause()
+    {
+        Log.d(TAG, "onPause: stop refreshing the weather.");
+        //stop the refresh when activity is not visible any more
+        refreshHandler.removeCallbacks(refreshRunner);
+
+        super.onPause();
     }
 
     /**
@@ -136,9 +166,27 @@ public class MainActivity extends AppCompatActivity
     private void checkLastCity()
     {
         String lastCityId = appSetting.getLastSuccessCity();
+        Date lastDate = appSetting.getLastSuccessDate();
+
+        //make sure we have the history
         if ( lastCityId != null )
         {
-            retrieveWeatherByCity(null, lastCityId);
+            //find last query time
+            if ( lastDate == null )
+            {
+                //set the Date to long long long time ago if we don't find one)
+                lastDate = new Date(0);
+            }
+            //abs() here is just make sure we got positive value if user changed device date??
+            long milliSecElapsed = Math.abs(new Date().getTime() - lastDate.getTime());
+
+            //if the weather is already displayed not long time ago, we won't query again
+            if ( weatherDisplayView.getVisibility() != View.VISIBLE
+                    || milliSecElapsed > AppConstants.WEATHER_REFRESH_INTERVAL )
+            {
+                //Log.d(TAG, "checkLastCity: querying weather info...");
+                retrieveWeatherByCity(null, lastCityId);
+            }
         }
     }
 
@@ -250,7 +298,9 @@ public class MainActivity extends AppCompatActivity
         String cityId = weatherInfo.id;
         if ( cityId != null && cityId.length() > 0 )
         {
+            //cache the city id and current Date (we will need them for refresh)
             appSetting.setLastSuccessCity(cityId);
+            appSetting.setLastSuccessDate(new Date());
         }
 
         //display City (,country) if available

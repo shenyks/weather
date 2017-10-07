@@ -23,4 +23,9 @@ public class AppConstants
     //default text to display weather
     public static final String WEATHER_NA = "N/A";
 
+    //Refresh Weather Info interval (in millisecond)
+    //We will decide whether to get the weather info again based on how long since last retrieve
+    // (we can allow user to change the interval)
+    public static final long WEATHER_REFRESH_INTERVAL = 30000;  //30 sec
+
 }

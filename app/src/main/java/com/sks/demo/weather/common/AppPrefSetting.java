@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.util.Date;
+
 /**
  * This class will be responsible for all setting related data operation.
  * In this app: it will save last city name that has valid weather info retrieved
@@ -16,8 +18,11 @@ public class AppPrefSetting
     //app Setting Handler
     private static SharedPreferences preferences;
 
-    //the key we used to set/get values to/from user preferences
+    //the key we used to set/get last queried city
     private static final String SETTING_KEY_LAST_CITY = "SETTING_KEY_LAST_CITY";
+
+    //the key we used to set/get last query time
+    private static final String SETTING_KEY_LAST_QUERY_DATE = "SETTING_KEY_LAST_QUERY_DATE";
 
     /**
      * Initialize it with an Activity in order to access user preferences
@@ -63,6 +68,48 @@ public class AppPrefSetting
         }
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(SETTING_KEY_LAST_CITY, lastSuccessCity);
+        editor.commit();
+    }
+
+    /**
+     * Get last successful retrieved date
+     * @return date when we got good weather info last time
+     */
+    public Date getLastSuccessDate()
+    {
+        //just to be safe
+        if ( preferences == null )
+        {
+            return null;
+        }
+
+        //we save the millisec instead of Date object
+        if ( preferences.contains( SETTING_KEY_LAST_QUERY_DATE ) )
+        {
+            Long timeMilliSec = preferences.getLong(SETTING_KEY_LAST_QUERY_DATE, 0);
+            if ( timeMilliSec == 0 )
+            {
+                return null;
+            }
+            return new Date(timeMilliSec);
+        }
+
+        return null;
+    }
+
+    /**
+     * Save the date/time when we got good weather info
+     * @param lastSuccessDate Date/time when we got good weather info
+     */
+    public void setLastSuccessDate(Date lastSuccessDate)
+    {
+        //just to be safe
+        if (preferences == null || lastSuccessDate == null )
+        {
+            return;
+        }
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putLong(SETTING_KEY_LAST_QUERY_DATE, lastSuccessDate.getTime());
         editor.commit();
     }
 
