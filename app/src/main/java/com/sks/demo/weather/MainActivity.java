@@ -83,6 +83,12 @@ public class MainActivity extends AppCompatActivity
         humidityTextView = (TextView)findViewById(R.id.weather_humidity);
         windTextView = (TextView)findViewById(R.id.weather_wind);
         weatherIcon = (ImageView)findViewById(R.id.weather_icon);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
 
         //find weather for last city (if any)
         checkLastCity();
