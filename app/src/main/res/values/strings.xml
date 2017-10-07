@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Weather</string>
+    <string name="search">Search</string>
     <string name="search_hint">Search Weather by City Name\n(We recommend to add state and country to get unambiguous result. For example: use \"paris,tx,us\" instead of \"paris\" only)</string>
 
     <!--UI display string-->
